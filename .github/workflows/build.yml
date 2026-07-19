@@ -42,6 +42,14 @@ jobs:
           restore-keys: |
             dl-${{ github.event.inputs.ref }}-
 
+      - name: Cache ccache (compiler cache, speeds up repeat builds)
+        uses: actions/cache@v4
+        with:
+          path: openwrt/.ccache
+          key: ccache-${{ github.event.inputs.ref }}-${{ github.run_number }}
+          restore-keys: |
+            ccache-${{ github.event.inputs.ref }}-
+
       - name: Vendor rtl8188eu package
         run: |
           rm -rf openwrt/package/kernel/rtl8188eu

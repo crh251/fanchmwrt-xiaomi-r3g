@@ -59,6 +59,7 @@ define Build/Compile
 		NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" \
 		CONFIG_RTL8188EU=m \
 		USER_MODULE_NAME=rtl8188eu \
+		KCFLAGS="-Wno-error" \
 		modules
 endef
 
