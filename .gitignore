@@ -7,3 +7,4 @@ openwrt/
 # CI log downloads
 *.zip
 logs_*.zip
+logs/
