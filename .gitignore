@@ -1,0 +1,5 @@
+# build artifacts (nothing is built in-repo; source is cloned into openwrt/ by CI)
+openwrt/
+*.bin
+*.itb
+.DS_Store
