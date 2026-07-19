@@ -68,15 +68,24 @@ jobs:
 
       - name: Show expanded config (debug)
         working-directory: openwrt
-        run: grep -E "TARGET_ramips|kmod-usb|kmod-rtl8188eu|rtl8188eu-firmware|PACKAGE_usbutils" .config
+        run: |
+          grep -E "TARGET_ramips|kmod-usb|kmod-rtl8188eu|rtl8188eu-firmware|PACKAGE_usbutils" .config
+          # Dump the effective diff of the expanded .config (what defconfig actually kept)
+          ./scripts/diffconfig.sh > effective.diffconfig || true
+          echo "===== effective.diffconfig ====="
+          cat effective.diffconfig
 
       - name: Download sources
         working-directory: openwrt
-        run: make download -j8
+        run: |
+          make download -j8
+          # Drop truncated/failed downloads (< 1KB) so the build step re-fetches them
+          find dl -type f -size -1024c -exec ls -l {} \; -exec rm -f {} \; || true
+          make download -j8
 
       - name: Build firmware
         working-directory: openwrt
-        run: make -j$(nproc) || make -j1 V=s
+        run: make -j$(nproc) || make -j1 || make -j1 V=s
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
@@ -87,3 +96,12 @@ jobs:
             openwrt/bin/targets/**/*.itb
             openwrt/bin/targets/**/sha256sums
           retention-days: 14
+
+      - name: Upload effective config (debug artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: effective-diffconfig-${{ github.run_number }}
+          path: openwrt/effective.diffconfig
+          retention-days: 14
+          if-no-files-found: ignore
