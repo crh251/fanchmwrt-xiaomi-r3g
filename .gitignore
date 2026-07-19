@@ -3,3 +3,7 @@ openwrt/
 *.bin
 *.itb
 .DS_Store
+
+# CI log downloads
+*.zip
+logs_*.zip

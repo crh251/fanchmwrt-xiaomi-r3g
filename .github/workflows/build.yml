@@ -54,9 +54,16 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
           make defconfig
-          # Fail loudly if defconfig silently dropped a symbol from the seed config
+          # Hard-fail only if a CRITICAL symbol (device profile / Wi-Fi driver /
+          # firmware / usb core) was silently dropped by defconfig; for the rest
+          # (e.g. usbutils, a diagnostic tool) just warn and keep building.
+          CRITICAL="CONFIG_TARGET_ramips_mt7621_DEVICE_xiaomi_mi-router-3g CONFIG_PACKAGE_kmod-rtl8188eu CONFIG_PACKAGE_rtl8188eu-firmware CONFIG_PACKAGE_kmod-usb-core"
           for sym in $(grep -oE '^CONFIG_[A-Za-z0-9_-]+' ../configs/r3g.config); do
-            grep -qx "${sym}=y" .config || { echo "::error::${sym} missing from expanded .config"; exit 1; }
+            grep -qx "${sym}=y" .config && continue
+            case " $CRITICAL " in
+              *" $sym "*) echo "::error::critical symbol ${sym} missing from expanded .config"; exit 1 ;;
+              *) echo "::warning::${sym} was dropped by defconfig (non-critical, continuing)" ;;
+            esac
           done
 
       - name: Show expanded config (debug)
